@@ -47,17 +47,21 @@ jobs:
 
       - name: Prepare Distribution
         run: |
-          mkdir -p ship/amd64 ship/arm64
+          mkdir -p ship/amd64/wispmark ship/arm64/wispmark
           
-          cp -r dist/wispmark-linux-amd64 ship/amd64/wispmark
-          cp -r dist/wispmark-linux-arm64 ship/arm64/wispmark
-
-          find ship -type f \( -name ".*" -o -name "package.json" -o -name "bun.lock" -o -name "cargo.lock" -o -name "cargo.toml" \) -delete
-          find ship -type d \( -name ".*" -o -name "src" -o -name "repos" \) -exec rm -rf {} +
-
+          for arch in amd64 arm64; do
+          	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark/wispmark
+          	cp README.md ship/wispmark-$arch/wispmark/
+          	cp LICENSE ship/wispmark-$arch/wispmark/
+          	cp -r server ship/wispmark-$arch/wispmark/
+          	cp -r client ship/wispmark-$arch/wispmark/
+          	
+          	find ship/wispmark-$arch/wispmark -type d -name "node_modules" -exec rm -rf {} +
+          	find ship/wispmark-$arch/wispmark -type d -name "target" -exec rm -rf {} +
+          done
           cd ship
-          zip -r ../dist/build-amd64.zip amd64
-          zip -r ../dist/build-arm64.zip arm64
+          zip -r ../dist/wispmark-amd64.zip amd64
+          zip -r ../dist/wispmark-arm64.zip arm64
 
       - name: Create Release
         uses: ncipollo/release-action@v1
