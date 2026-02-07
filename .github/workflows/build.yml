@@ -55,7 +55,6 @@ jobs:
           find ship -type f \( -name ".*" -o -name "package.json" -o -name "bun.lock" -o -name "cargo.lock" -o -name "cargo.toml" \) -delete
           find ship -type d \( -name ".*" -o -name "src" -o -name "repos" \) -exec rm -rf {} +
 
-          # Zip for release
           cd ship
           zip -r ../dist/build-amd64.zip amd64
           zip -r ../dist/build-arm64.zip arm64
