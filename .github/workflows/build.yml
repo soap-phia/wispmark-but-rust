@@ -47,7 +47,7 @@ jobs:
 
       - name: Prepare Distribution
         run: |
-          mkdir -p ship/amd64/wispmark ship/arm64/wispmark
+          mkdir -p ship/wispmark-amd64/ ship/wispmark-arm64/
           
           for arch in amd64 arm64; do
           	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark/wispmark
