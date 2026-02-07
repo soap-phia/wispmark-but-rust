@@ -50,18 +50,18 @@ jobs:
           mkdir -p ship/wispmark-amd64/ ship/wispmark-arm64/
           
           for arch in amd64 arm64; do
-          	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark/wispmark
-          	cp README.md ship/wispmark-$arch/wispmark/
-          	cp LICENSE ship/wispmark-$arch/wispmark/
-          	cp -r server ship/wispmark-$arch/wispmark/
-          	cp -r client ship/wispmark-$arch/wispmark/
+          	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark
+          	cp README.md ship/wispmark-$arch/
+          	cp LICENSE ship/wispmark-$arch/
+          	cp -r server ship/wispmark-$arch/
+          	cp -r client ship/wispmark-$arch/
           	
-          	find ship/wispmark-$arch/wispmark -type d -name "node_modules" -exec rm -rf {} +
-          	find ship/wispmark-$arch/wispmark -type d -name "target" -exec rm -rf {} +
+          	find ship/wispmark-$arch -type d -name "node_modules" -exec rm -rf {} +
+          	find ship/wispmark-$arch -type d -name "target" -exec rm -rf {} +
           done
           cd ship
-          zip -r ../dist/wispmark-amd64.zip amd64
-          zip -r ../dist/wispmark-arm64.zip arm64
+          zip -r ../dist/wispmark-amd64.zip wispmark-amd64
+          zip -r ../dist/wispmark-arm64.zip wispmark-arm64
 
       - name: Create Release
         uses: ncipollo/release-action@v1
