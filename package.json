@@ -1,0 +1,13 @@
+{
+	"name": "wispmark-rust",
+	"author": "soap phia",
+	"module": "src/main.rs",
+	"type": "module",
+	"scripts": {
+	  "prebuild": "rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu",
+	  "build:amd64": "cargo build --release --target x86_64-unknown-linux-gnu",
+	  "build:arm64": "cargo build --release --target aarch64-unknown-linux-gnu",
+	  "build:all": "bun run prebuild && mkdir -p dist && bun run build:amd64 && bun run build:arm && bun run finalize",
+	  "finalize": "cp target/x86_64-unknown-linux-gnu/release/wispmark dist/wispmark-linux-amd64 && cp target/aarch64-unknown-linux-gnu/release/wispmark dist/wispmark-linux-arm64"
+	}
+  }
