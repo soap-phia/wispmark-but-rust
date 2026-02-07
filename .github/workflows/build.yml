@@ -43,18 +43,15 @@ jobs:
 
       - name: Build
         run: |
-          bun run build:amd64
-          bun run build:arm64
+          bun run build:all
 
       - name: Prepare Distribution
         run: |
           mkdir -p ship/amd64 ship/arm64
           
-          # Copy artifacts (assuming build:all puts them in dist/)
           cp -r dist/wispmark-linux-amd64 ship/amd64/wispmark
           cp -r dist/wispmark-linux-arm64 ship/arm64/wispmark
 
-          # Remove forbidden files/folders from the ship directory
           find ship -type f \( -name ".*" -o -name "package.json" -o -name "bun.lock" -o -name "cargo.lock" -o -name "cargo.toml" \) -delete
           find ship -type d \( -name ".*" -o -name "src" -o -name "repos" \) -exec rm -rf {} +
 
