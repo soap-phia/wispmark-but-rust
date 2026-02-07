@@ -15,9 +15,9 @@ You need:
 - GCC
 - Go
 
-You must also be on a recent Linux distribution. Debian 13 and Arch Linux have been tested to work.
+You must also be on a recent Linux distribution. Debian 13 has been tested to work.
 
-Run `./wispmark.xsh` to start the tests. If you don't already have Xonsh installed, run `./wispmark.sh` which is a wrapper that will install Xonsh in a Python virtual environment.
+Run `./wispmark` to start the tests. If you don't have wispmark built, run `cargo build --release`. The binary will be located at `target/release/wispmark`.
 
 Note: If you want to rebuild all of the server and client implementations to run a clean test, you can run: `git clean -ffXd`
 
@@ -37,33 +37,29 @@ Client:
 
 ## Usage:
 ```
-usage: wispmark.xsh [-h] [--duration DURATION] [--output OUTPUT] [--print-md]
+A benchmarking tool for Wisp protocol implementations
 
-A benchmarking tool for Wisp protocol implementations.
+Usage: wispmark [OPTIONS]
 
-options:
-  -h, --help           show this help message and exit
-  --duration DURATION  The duration of each test, in seconds. The default is 10s.
-  --output OUTPUT      The file to use for output after test results are complete. The default is wispmark-results.md.
-  --print-md           Print a markdown table after test results are complete.
+Options:
+      --duration <DURATION>  [default: 10]
+      --output <OUTPUT>      [default: wispmark-results.md]
+      --print-md             
+  -h, --help                 Print help
 ```
 
 ## Current Results:
 Note that test results can vary wildly across different CPUs.
 
-```
-CPU: AMD Ryzen 9 5950X 16-Core Processor (x32)
-Test duration: 20s
-```
-
+CPU: 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz (x8)<br>
+Test duration: 10s
 |                             | wisp-js (10)  | wisp-js (5x10) | wisp-mux (10) | wisp-mux (5x10) |
 |-----------------------------|---------------|----------------|---------------|-----------------|
-| wisp-server-node            | 1131.25 MiB/s | 1085.71 MiB/s  | 1223.59 MiB/s | 1208.65 MiB/s   |
-| wisp-js                     | 1287.54 MiB/s | 1128.26 MiB/s  | 1397.44 MiB/s | 1326.38 MiB/s   |
-| wisp-server-python          | 1229.35 MiB/s | 2012.76 MiB/s  | 1000.48 MiB/s | 4676.45 MiB/s   |
-| epoxy-server (singlethread) | 1653.19 MiB/s | 1465.92 MiB/s  | 1643.67 MiB/s | 1514.6 MiB/s    |
-| epoxy-server (multithread)  | 1513.66 MiB/s | 2174.03 MiB/s  | 1418.53 MiB/s | 4141.68 MiB/s   |
-| go-wisp                     | 1589.08 MiB/s | 1771.7 MiB/s   | 2390.55 MiB/s | 3395.65 MiB/s   |
+| wisp-js                     | 1224.06 MiB/s | 956.76 MiB/s   | 1092.25 MiB/s | 1092.25 MiB/s   |
+| wisp-server-python          | 0.00 MiB/s    | 1507.66 MiB/s  | 976.18 MiB/s  | 1600.39 MiB/s   |
+| epoxy-server (singlethread) | 1264.60 MiB/s | 1265.07 MiB/s  | 1428.62 MiB/s | 1367.92 MiB/s   |
+| epoxy-server (multithread)  | 1071.33 MiB/s | 1899.19 MiB/s  | 1133.15 MiB/s | 2696.37 MiB/s   |
+| go-wisp                     | 1305.62 MiB/s | 1909.56 MiB/s  | 1856.59 MiB/s | 3185.71 MiB/s   |
 
 
 ## Old Results:
