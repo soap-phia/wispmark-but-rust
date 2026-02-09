@@ -114,8 +114,8 @@ pub fn write_wispjs_files(target_dir: &PathBuf) -> Result<()> {
 
     let package_json_path = server_dir.join("package.json");
     if !package_json_path.exists() {
-        std::fs::write(package_json_path, embedded::PACKAGE_JSON)
-            .context("Failed to write package.json")?;
+        std::fs::write(package_json_path, embedded::SERVER_PACKAGE_JSON)
+            .context("Failed to write server package.json")?;
     }
 
     let server_mjs_path = server_dir.join("server.mjs");
@@ -132,8 +132,8 @@ pub fn write_wispjs_files(target_dir: &PathBuf) -> Result<()> {
 
     let client_package_path = client_dir.join("package.json");
     if !client_package_path.exists() {
-        std::fs::write(client_package_path, embedded::CLIENT_MJS)
-            .context("Failed to write package.json")?;
+        std::fs::write(client_package_path, embedded::CLIENT_PACKAGE_JSON) // ← FIXED!
+            .context("Failed to write client package.json")?;
     }
     Ok(())
 }
