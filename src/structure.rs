@@ -32,11 +32,26 @@ pub trait WispServer: Send + Sync {
     fn run(&self, port: u16, log_file: &PathBuf) -> Result<Child>;
 }
 
-pub struct WispGoOld {
+pub struct WispJS {
     pub path: PathBuf,
 }
 
-pub struct WispGoNew {
+pub struct WispPy {
+    pub path: PathBuf,
+    pub repo: PathBuf,
+    pub venv: PathBuf,
+    pub python: String,
+    pub name: String,
+}
+
+pub struct EpoxyServer {
+    pub path: PathBuf,
+    pub epoxy_src: PathBuf,
+    pub threading: String,
+    pub name: String,
+}
+
+pub struct WispGo {
     pub path: PathBuf,
 }
 
