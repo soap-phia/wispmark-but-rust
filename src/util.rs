@@ -103,6 +103,36 @@ pub fn base() -> PathBuf {
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
 }
 
+pub fn write_wispjs_files(target_dir: &PathBuf) -> Result<()> {
+    use crate::embedded;
+
+    let server_dir = target_dir.join("server").join("js");
+    let client_dir = target_dir.join("client").join("js");
+
+    std::fs::create_dir_all(&server_dir).context("Failed to create wispjs server directory")?;
+    std::fs::create_dir_all(&client_dir).context("Failed to create wispjs client directory")?;
+
+    let package_json_path = server_dir.join("package.json");
+    if !package_json_path.exists() {
+        std::fs::write(package_json_path, embedded::PACKAGE_JSON)
+            .context("Failed to write package.json")?;
+    }
+
+    let server_mjs_path = server_dir.join("server.mjs");
+    if !server_mjs_path.exists() {
+        std::fs::write(server_mjs_path, embedded::SERVER_MJS)
+            .context("Failed to write server.mjs")?;
+    }
+
+    let client_mjs_path = client_dir.join("client.mjs");
+    if !client_mjs_path.exists() {
+        std::fs::write(client_mjs_path, embedded::CLIENT_MJS)
+            .context("Failed to write client.mjs")?;
+    }
+
+    Ok(())
+}
+
 pub fn sudo() -> Result<()> {
     let status = Command::new("sudo")
         .arg("true")

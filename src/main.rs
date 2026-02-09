@@ -1,6 +1,7 @@
 mod benchmark;
 mod client;
 mod echo;
+mod embedded;
 mod server;
 mod structure;
 mod util;
@@ -61,7 +62,7 @@ async fn main() -> Result<()> {
     };
     
     util::set_base_dir(base_dir)?;
-    
+    util::write_wispjs_files(&base_dir)?;
     echo::get_echo().await?;
     let results = benchmark::benchmark(args.duration).await?;
     let cpu_info = util::get_cpu_info()?;
