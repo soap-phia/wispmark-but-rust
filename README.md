@@ -15,6 +15,9 @@ You need:
 - GCC
 - Go
 
+> [!NOTE]
+> you still need the dependencies for the prebuilt packages!!!!!
+
 You must also be on a recent Linux distribution. Debian 13 has been tested to work.
 
 Run `./wispmark` to start the tests. If you don't have wispmark built, run `cargo build --release`. The binary will be located at `target/release/wispmark`.
