@@ -130,6 +130,11 @@ pub fn write_wispjs_files(target_dir: &PathBuf) -> Result<()> {
             .context("Failed to write client.mjs")?;
     }
 
+    let client_package_path = client_dir.join("package.json");
+    if !client_package_path.exists() {
+        std::fs::write(client_package_path, embedded::CLIENT_MJS)
+            .context("Failed to write package.json")?;
+    }
     Ok(())
 }
 
