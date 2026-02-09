@@ -113,29 +113,29 @@ pub fn write_wispjs_files(target_dir: &PathBuf) -> Result<()> {
     std::fs::create_dir_all(&client_dir).context("Failed to create wispjs client directory")?;
 
     let package_json_path = server_dir.join("package.json");
-    println!("Copying server package.json to {}", package_json_path.display());
     if !package_json_path.exists() {
+		println!("Copying server package.json to {}", package_json_path.display());
         std::fs::write(package_json_path, embedded::SERVER_PACKAGE_JSON)
             .context("Failed to write server package.json")?;
     }
 
     let server_mjs_path = server_dir.join("server.mjs");
-    println!("Copying server.mjs to {}", server_mjs_path.display());
     if !server_mjs_path.exists() {
+		println!("Copying server.mjs to {}", server_mjs_path.display());
         std::fs::write(server_mjs_path, embedded::SERVER_MJS)
             .context("Failed to write server.mjs")?;
     }
 
     let client_mjs_path = client_dir.join("client.mjs");
-    println!("Copying client.mjs to {}", client_mjs_path.display());
     if !client_mjs_path.exists() {
+		println!("Copying client.mjs to {}", client_mjs_path.display());
         std::fs::write(client_mjs_path, embedded::CLIENT_MJS)
             .context("Failed to write client.mjs")?;
     }
 
     let client_package_path = client_dir.join("package.json");
-    println!("Copying client package.json to {}", client_package_path.display());
     if !client_package_path.exists() {
+		println!("Copying client package.json to {}", client_package_path.display());
         std::fs::write(client_package_path, embedded::CLIENT_PACKAGE_JSON)
             .context("Failed to write client package.json")?;
     }
