@@ -61,8 +61,8 @@ async fn main() -> Result<()> {
         std::env::current_dir()?
     };
     
-    util::set_base_dir(base_dir)?;
     util::write_wispjs_files(&base_dir)?;
+    util::set_base_dir(base_dir)?;
     echo::get_echo().await?;
     let results = benchmark::benchmark(args.duration).await?;
     let cpu_info = util::get_cpu_info()?;
