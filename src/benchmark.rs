@@ -1,4 +1,4 @@
-use crate::structure::{BenchmarkResult, BenchmarkResults, WispServer, WispClient};
+use crate::structure::{BenchmarkResult, BenchmarkResults, WispClient, WispServer};
 use crate::{client, echo, server, util};
 use anyhow::Result;
 use std::path::PathBuf;

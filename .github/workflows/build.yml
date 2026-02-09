@@ -1,79 +1,79 @@
 name: Build and Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag'
-        required: true
-        type: string
-      release_name:
-        description: 'Release name'
-        required: true
-        type: string
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Release tag"
+                required: true
+                type: string
+            release_name:
+                description: "Release name"
+                required: true
+                type: string
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+            - name: Install Rust
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
 
-      - name: Install Cross-Compilation Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+            - name: Install Cross-Compilation Tools
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y gcc-aarch64-linux-gnu
 
-      - name: Configure Linker
-        run: |
-          mkdir -p .cargo
-          echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml
-          echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
+            - name: Configure Linker
+              run: |
+                  mkdir -p .cargo
+                  echo '[target.aarch64-unknown-linux-gnu]' > .cargo/config.toml
+                  echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
 
-      - name: Build
-        run: |
-          bun run build:all
+            - name: Build
+              run: |
+                  bun run build:all
 
-      - name: Prepare Distribution
-        run: |
-          mkdir -p ship/wispmark-amd64/ ship/wispmark-arm64/
-          
-          for arch in amd64 arm64; do
-          	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark
-          	cp README.md ship/wispmark-$arch/
-          	cp LICENSE ship/wispmark-$arch/
-          	cp -r server ship/wispmark-$arch/
-          	cp -r client ship/wispmark-$arch/
-          	
-          	find ship/wispmark-$arch -type d -name "node_modules" -exec rm -rf {} +
-          	find ship/wispmark-$arch -type d -name "target" -exec rm -rf {} +
-          done
-          cd ship
-          zip -r ../dist/wispmark-amd64.zip wispmark-amd64
-          zip -r ../dist/wispmark-arm64.zip wispmark-arm64
+            - name: Prepare Distribution
+              run: |
+                  mkdir -p ship/wispmark-amd64/ ship/wispmark-arm64/
 
-      - name: Create Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ inputs.tag }}
-          name: ${{ inputs.release_name }}
-          artifacts: "dist/*.zip"
-          allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
-          makeLatest: true
-          body: |
-            **Tag:** `${{ inputs.tag }}`
-            **Commit:** ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+                  for arch in amd64 arm64; do
+                  	cp dist/wispmark-linux-$arch ship/wispmark-$arch/wispmark
+                  	cp README.md ship/wispmark-$arch/
+                  	cp LICENSE ship/wispmark-$arch/
+                  	cp -r server ship/wispmark-$arch/
+                  	cp -r client ship/wispmark-$arch/
+                  	
+                  	find ship/wispmark-$arch -type d -name "node_modules" -exec rm -rf {} +
+                  	find ship/wispmark-$arch -type d -name "target" -exec rm -rf {} +
+                  done
+                  cd ship
+                  zip -r ../dist/wispmark-amd64.zip wispmark-amd64
+                  zip -r ../dist/wispmark-arm64.zip wispmark-arm64
+
+            - name: Create Release
+              uses: ncipollo/release-action@v1
+              with:
+                  tag: ${{ inputs.tag }}
+                  name: ${{ inputs.release_name }}
+                  artifacts: "dist/*.zip"
+                  allowUpdates: true
+                  removeArtifacts: true
+                  replacesArtifacts: true
+                  makeLatest: true
+                  body: |
+                      **Tag:** `${{ inputs.tag }}`
+                      **Commit:** ${{ github.sha }}
+                  token: ${{ secrets.GITHUB_TOKEN }}

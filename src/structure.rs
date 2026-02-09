@@ -84,7 +84,7 @@ impl BenchmarkResults {
             client_order: Vec::new(),
         }
     }
-    
+
     pub fn add(&mut self, server: String, client: String, result: BenchmarkResult) {
         if !self.server_order.contains(&server) {
             self.server_order.push(server.clone());
@@ -92,13 +92,13 @@ impl BenchmarkResults {
         if !self.client_order.contains(&client) {
             self.client_order.push(client.clone());
         }
-        
+
         self.results
             .entry(server)
             .or_insert_with(HashMap::new)
             .insert(client, result);
     }
-    
+
     pub fn get(&self, server: &str, client: &str) -> Option<&BenchmarkResult> {
         self.results.get(server)?.get(client)
     }
