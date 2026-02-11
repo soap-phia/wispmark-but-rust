@@ -64,9 +64,9 @@ async fn main() -> Result<()> {
     util::write_wispjs_files(&base_dir)?;
     util::set_base_dir(base_dir)?;
     echo::get_echo().await?;
-    let results = benchmark::benchmark(args.duration).await?;
+    let (results, baseline) = benchmark::benchmark(args.duration).await?;
     let cpu_info = util::get_cpu_info()?;
-    let output = benchmark::format_results(&results, &cpu_info, args.duration);
+    let output = benchmark::format_results(&results, &cpu_info, args.duration, &baseline);
     if args.print_md {
         println!("{}", output);
     }

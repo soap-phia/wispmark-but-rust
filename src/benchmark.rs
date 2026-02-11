@@ -3,6 +3,8 @@ use crate::{client, echo, server, util};
 use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Child;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
 use tokio::time::{sleep, Duration};
 
 fn kill(child: &mut Child) {
@@ -10,9 +12,22 @@ fn kill(child: &mut Child) {
     let _ = child.wait();
 }
 
-pub async fn benchmark(test: u64) -> Result<BenchmarkResults> {
+pub struct BaselineResults {
+    pub bandwidth_mib_s: f64,
+}
+
+pub async fn benchmark(test: u64) -> Result<(BenchmarkResults, Option<BaselineResults>)> {
     let mut echo_process = echo::run_echo()?;
     util::wait_for_tcp(util::ECHO_PORT, util::SERVER_TIMEOUT).await?;
+
+    let baseline_results = match baseline(test).await {
+        Ok(b) => Some(b),
+        Err(e) => {
+            eprintln!("Warning: baseline latency measurement failed: {}", e);
+            None
+        }
+    };
+
     let servers = server::get_implementations();
     let clients = client::get_implementations();
 
@@ -59,7 +74,41 @@ pub async fn benchmark(test: u64) -> Result<BenchmarkResults> {
     kill(&mut echo_process);
     println!("WispMark has finished.");
 
-    Ok(results)
+    Ok((results, baseline_results))
+}
+
+async fn baseline(test: u64) -> Result<BaselineResults> {
+    println!("Measuring baseline bandwidth for {}s...", test);
+
+    let handle = tokio::spawn(async move {
+        let buffer = vec![0u8; 8192];
+        loop {
+            if let Ok(mut stream) = TcpStream::connect(format!("127.0.0.1:{}", util::ECHO_PORT)).await {
+                let mut read_buf = vec![0u8; 8192];
+                loop {
+                    match stream.write_all(&buffer).await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                    match stream.read(&mut read_buf).await {
+                        Ok(0) => break,
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }
+            sleep(Duration::from_millis(10)).await;
+        }
+    });
+
+    sleep(Duration::from_secs(1)).await;
+
+    let bandwidth_bytes_per_sec = util::get_bandwidth(util::ECHO_PORT, test).await?;
+    let bandwidth_mib_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
+    handle.abort();
+    println!("Result: {:.2} MiB/s", bandwidth_mib_s);
+
+    Ok(BaselineResults { bandwidth_mib_s })
 }
 
 async fn single(
@@ -118,7 +167,7 @@ async fn single(
     result
 }
 
-pub fn format_results(results: &BenchmarkResults, cpu_info: &str, test: u64) -> String {
+pub fn format_results(results: &BenchmarkResults, cpu_info: &str, test: u64, baseline_results: &Option<BaselineResults>) -> String {
     let mut output = String::new();
 
     output.push_str(&format!("CPU: {}\n\n", cpu_info));
@@ -126,6 +175,15 @@ pub fn format_results(results: &BenchmarkResults, cpu_info: &str, test: u64) -> 
     let mut table = vec![vec!["".to_string()]];
     for client in &results.client_order {
         table[0].push(client.clone());
+    }
+
+    if let Some(baseline) = baseline_results {
+        let mut row = vec!["baseline".to_string()];
+        for _ in &results.client_order {
+            let result = format!("{:.2} MiB`/`s", baseline.bandwidth_mib_s);
+            row.push(result);
+        }
+        table.push(row);
     }
 
     for server in &results.server_order {
