@@ -222,7 +222,7 @@ pub fn format_results(results: &BenchmarkResults, cpu_info: &str, test: u64, bas
                 .find(|(name, _)| name == client)
                 .map(|(_, bw)| *bw)
                 .unwrap_or(0.0);
-            let result = format!("{:.2} MiB`/`s", bandwidth);
+            let result = format!("{:.2} MiB/s", bandwidth);
             row.push(result);
         }
         table.push(row);
