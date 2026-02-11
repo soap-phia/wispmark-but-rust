@@ -13,14 +13,16 @@ fn kill(child: &mut Child) {
 }
 
 pub struct BaselineResults {
-    pub bandwidth_mib_s: f64,
+    pub bandwidths: Vec<(String, f64)>,
 }
 
 pub async fn benchmark(test: u64) -> Result<(BenchmarkResults, Option<BaselineResults>)> {
     let mut echo_process = echo::run_echo()?;
     util::wait_for_tcp(util::ECHO_PORT, util::SERVER_TIMEOUT).await?;
 
-    let baseline_results = match baseline(test).await {
+    let clients = client::get_implementations();
+    
+    let baseline_results = match baseline(test, &clients).await {
         Ok(b) => Some(b),
         Err(e) => {
             eprintln!("Warning: baseline latency measurement failed: {}", e);
@@ -29,7 +31,6 @@ pub async fn benchmark(test: u64) -> Result<(BenchmarkResults, Option<BaselineRe
     };
 
     let servers = server::get_implementations();
-    let clients = client::get_implementations();
 
     for server in &servers {
         if !server.check_install() {
@@ -77,38 +78,74 @@ pub async fn benchmark(test: u64) -> Result<(BenchmarkResults, Option<BaselineRe
     Ok((results, baseline_results))
 }
 
-async fn baseline(test: u64) -> Result<BaselineResults> {
-    println!("Measuring baseline bandwidth for {}s...", test);
+async fn baseline(test: u64, clients: &[Box<dyn WispClient>]) -> Result<BaselineResults> {    
+    let mut bandwidths = Vec::new();
+    
+    for client in clients {
+        let client_name = client.name().to_string();
+        println!("Measuring baseline bandwidth for {}s...", client_name);
 
-    let handle = tokio::spawn(async move {
-        let buffer = vec![0u8; 8192];
-        loop {
-            if let Ok(mut stream) = TcpStream::connect(format!("127.0.0.1:{}", util::ECHO_PORT)).await {
-                let mut read_buf = vec![0u8; 8192];
+        let (instances, streams) = client_config(&client_name);
+        let total_connections = instances * streams;
+        
+        let mut handles = Vec::new();
+        for _ in 0..total_connections {
+            let handle = tokio::spawn(async move {
+                let buffer = vec![0u8; 8192];
                 loop {
-                    match stream.write_all(&buffer).await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Ok(mut stream) = TcpStream::connect(format!("127.0.0.1:{}", util::ECHO_PORT)).await {
+                        let mut read_buf = vec![0u8; 8192];
+                        loop {
+                            match stream.write_all(&buffer).await {
+                                Ok(_) => {}
+                                Err(_) => break,
+                            }
+                            match stream.read(&mut read_buf).await {
+                                Ok(0) => break,
+                                Ok(_) => {}
+                                Err(_) => break,
+                            }
+                        }
                     }
-                    match stream.read(&mut read_buf).await {
-                        Ok(0) => break,
-                        Ok(_) => {}
-                        Err(_) => break,
-                    }
+                    sleep(Duration::from_millis(10)).await;
                 }
-            }
-            sleep(Duration::from_millis(10)).await;
+            });
+            handles.push(handle);
         }
-    });
 
-    sleep(Duration::from_secs(1)).await;
+        sleep(Duration::from_secs(1)).await;
 
-    let bandwidth_bytes_per_sec = util::get_bandwidth(util::ECHO_PORT, test).await?;
-    let bandwidth_mib_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
-    handle.abort();
-    println!("Result: {:.2} MiB/s", bandwidth_mib_s);
+        let bandwidth_bytes_per_sec = util::get_bandwidth(util::ECHO_PORT, test).await?;
+        let bandwidth_mib_s = bandwidth_bytes_per_sec / (1024.0 * 1024.0);
+        
+        for handle in handles {
+            handle.abort();
+        }
+        
+        println!("Result: {:.2} MiB/s", bandwidth_mib_s);
+        
+        bandwidths.push((client_name, bandwidth_mib_s));
+    }
 
-    Ok(BaselineResults { bandwidth_mib_s })
+    Ok(BaselineResults { bandwidths })
+}
+
+fn client_config(name: &str) -> (usize, usize) {
+    if let Some(start) = name.find('(') {
+        if let Some(end) = name.find(')') {
+            let config = &name[start + 1..end];
+            
+            if let Some(pos) = config.find('×').or_else(|| config.find('x')) {
+                let instances = config[..pos].trim().parse().unwrap_or(1);
+                let streams = config[pos + 1..].trim().parse().unwrap_or(10);
+                return (instances, streams);
+            } else {
+                let streams = config.trim().parse().unwrap_or(10);
+                return (1, streams);
+            }
+        }
+    }
+    (1, 10)
 }
 
 async fn single(
@@ -179,8 +216,13 @@ pub fn format_results(results: &BenchmarkResults, cpu_info: &str, test: u64, bas
 
     if let Some(baseline) = baseline_results {
         let mut row = vec!["baseline".to_string()];
-        for _ in &results.client_order {
-            let result = format!("{:.2} MiB`/`s", baseline.bandwidth_mib_s);
+        for client in &results.client_order {
+            let bandwidth = baseline.bandwidths
+                .iter()
+                .find(|(name, _)| name == client)
+                .map(|(_, bw)| *bw)
+                .unwrap_or(0.0);
+            let result = format!("{:.2} MiB`/`s", bandwidth);
             row.push(result);
         }
         table.push(row);
