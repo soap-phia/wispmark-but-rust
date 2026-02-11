@@ -83,7 +83,7 @@ async fn baseline(test: u64, clients: &[Box<dyn WispClient>]) -> Result<Baseline
     
     for client in clients {
         let client_name = client.name().to_string();
-        println!("Measuring baseline bandwidth for {}s...", client_name);
+        println!("Measuring baseline bandwidth for {}s...", test);
 
         let (instances, streams) = client_config(&client_name);
         let total_connections = instances * streams;
